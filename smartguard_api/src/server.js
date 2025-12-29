@@ -5,6 +5,8 @@ const http = require('http');
 const cors = require('cors');
 const { Server } = require('socket.io');
 const nodemailer = require('nodemailer');
+const os = require('os');
+const dns = require('multicast-dns')();
 const { saveAlarm, getAlarmsByUserId, countAlarmsByUserId } = require('./models/Alarm');
 
 const app = express();
@@ -319,5 +321,35 @@ app.get('/api/alarms/history/:userId', (req, res) => {
 
 const PORT = 4000;
 server.listen(PORT, '0.0.0.0', () => {
-  console.log(`Backend running on http://0.0.0.0:${PORT}`);
+  // Local IP'yi bul
+  const interfaces = os.networkInterfaces();
+  let localIp = 'localhost';
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      // IPv4 ve internal olmayan adresi al
+      if (iface.family === 'IPv4' && !iface.internal) {
+        localIp = iface.address;
+        break;
+      }
+    }
+  }
+
+  console.log(`\n✅ Backend çalışıyor: http://0.0.0.0:${PORT}`);
+  console.log(`📱 iPhone'dan erişim: http://smartguard.local:${PORT}`);
+  console.log(`🖥️  Bu bilgisayardan: http://${localIp}:${PORT}\n`);
+
+  // mDNS (Bonjour) kaydı - iPhone otomatik bulabilir
+  dns.on('query', (query) => {
+    if (query.questions[0].name === 'smartguard.local') {
+      dns.respond([
+        {
+          name: 'smartguard.local',
+          type: 'A',
+          ttl: 300,
+          data: localIp
+        }
+      ]);
+      console.log(`🔗 mDNS cevap: smartguard.local -> ${localIp}`);
+    }
+  });
 });
