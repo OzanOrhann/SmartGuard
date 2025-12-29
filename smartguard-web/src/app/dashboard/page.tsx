@@ -34,7 +34,7 @@ export default function DashboardPage() {
 
     // Browser notification (permission gerekli)
     if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('SmartGuard Alarm', {
+      new Notification('Akıllı Güvenlik İstemi Alarm', {
         body: data.alarms.map(translateAlarm).join(', '),
         icon: '/favicon.ico',
       })

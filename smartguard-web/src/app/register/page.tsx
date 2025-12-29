@@ -43,7 +43,7 @@ export default function RegisterPage() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100 px-4">
       <div className="max-w-md w-full bg-white rounded-xl shadow-lg p-8">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2">SmartGuard</h1>
+          <h1 className="text-3xl font-bold text-gray-800 mb-2">Akıllı Güvenlik İstemi</h1>
           <p className="text-gray-600">Yeni Hesap Oluştur</p>
         </div>
 

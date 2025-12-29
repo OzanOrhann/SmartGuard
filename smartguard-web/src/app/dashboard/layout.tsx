@@ -54,7 +54,7 @@ export default function DashboardLayout({
               <Activity className="text-white" size={20} />
             </div>
             <div>
-              <h1 className="text-lg font-bold text-gray-900">SmartGuard</h1>
+              <h1 className="text-lg font-bold text-gray-900">Akıllı Güvenlik İstemi</h1>
               <p className="text-xs text-gray-500">Health Monitor</p>
             </div>
           </div>

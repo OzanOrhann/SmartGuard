@@ -36,7 +36,7 @@ const defaultThresholds = {
   minHR: 40,
   maxHR: 120,
   minSpO2: 92,
-  immobileSec: 600,
+  immobileSec: 15,  // Test için 15 saniye (production'da 600 yapılacak)
   fallG: 2.0
 };
 
@@ -47,6 +47,9 @@ let lastMovementTs = null;
 
 // Simulator kontrol durumu
 let simulatorRunning = true;
+// Simulator senaryosu kontrolü
+let simScenario = null; // 'immobile' | null (ileride: 'fall' vs.)
+let simScenarioUntil = 0; // timestamp (ms)
 
 const server = http.createServer(app);
 
@@ -161,6 +164,41 @@ app.post('/api/simulator/start', (req, res) => {
   res.json({ message: 'Simulator başlatıldı', running: simulatorRunning });
 });
 
+// Simulator kontrol bilgisi (çalışma + senaryo)
+app.get('/api/simulator/control', (req, res) => {
+  res.json({ running: simulatorRunning, scenario: simScenario, until: simScenarioUntil });
+});
+
+// Senaryo ayarla (şimdilik sadece hareketsizlik)
+// Body: { type: 'immobile', seconds?: number, immediate?: boolean }
+app.post('/api/simulator/scenario', (req, res) => {
+  const { type, seconds = 15, immediate = false } = req.body || {};
+  const now = Date.now();
+
+  if (type !== 'immobile') {
+    return res.status(400).json({ success: false, error: 'Desteklenmeyen senaryo' });
+  }
+
+  simScenario = 'immobile';
+  simScenarioUntil = now + Math.max(1, Number(seconds)) * 1000;
+
+  // Hemen alarm test etmek için sunucu tarafı hareketsizlik sayacını geriye çek
+  if (immediate) {
+    // Bir sonraki düşük hareketli örnekte hemen IMMOBILE üretilsin
+    const backMs = (thresholds.immobileSec || 600) * 1000 + 1000;
+    lastMovementTs = now - backMs;
+  }
+
+  return res.json({ success: true, scenario: simScenario, until: simScenarioUntil, immediate });
+});
+
+// Senaryoyu temizle
+app.post('/api/simulator/clear', (req, res) => {
+  simScenario = null;
+  simScenarioUntil = 0;
+  return res.json({ success: true });
+});
+
 // E-mail bildirim gönder
 app.post('/api/notify/email', async (req, res) => {
   const { alarmType, severity, timestamp, email, snapshot, reasons } = req.body;
@@ -179,7 +217,7 @@ app.post('/api/notify/email', async (req, res) => {
 
   const snapshotText = snapshot ? `\nDeğerler:\n- Nabız: ${snapshot.heartRate} bpm\n- SpO₂: ${snapshot.spo2}%\n- İvme: ${Math.sqrt((snapshot.ax||0)**2 + (snapshot.ay||0)**2 + (snapshot.az||0)**2).toFixed(2)} g` : '';
 
-  const message = `SmartGuard Alarm Bildirimi\n\nSaat/Tarih: ${tsText}\nŞiddet: ${severity || 'CRITICAL'}\nSebep(ler): ${reasonText}${snapshotText}\n\nBu bildirim SmartGuard tarafından otomatik oluşturulmuştur.`;
+  const message = `Akıllı Güvenlik İstemi Alarm Bildirimi\n\nSaat/Tarih: ${tsText}\nŞiddet: ${severity || 'CRITICAL'}\nSebep(ler): ${reasonText}${snapshotText}\n\nBu bildirim Akıllı Güvenlik İstemi tarafından otomatik oluşturulmuştur.`;
 
   // Eğer SMTP ayarları varsa gerçek e-mail gönder
   if (emailTransporter) {
@@ -187,11 +225,11 @@ app.post('/api/notify/email', async (req, res) => {
       await emailTransporter.sendMail({
         from: process.env.SMTP_FROM || process.env.SMTP_USER,
         to: email,
-        subject: `SmartGuard Alarm - ${reasonText}`,
+        subject: `Akıllı Güvenlik İstemi Alarm - ${reasonText}`,
         text: message,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #dc2626;">SmartGuard Alarm Bildirimi</h2>
+            <h2 style="color: #dc2626;">Akıllı Güvenlik İstemi Alarm Bildirimi</h2>
             <p><strong>Saat/Tarih:</strong> ${tsText}</p>
             <p><strong>Şiddet:</strong> <span style="color: #dc2626;">${severity || 'CRITICAL'}</span></p>
             <p><strong>Sebep(ler):</strong> ${reasonText}</p>
@@ -204,7 +242,7 @@ app.post('/api/notify/email', async (req, res) => {
               </ul>
             ` : ''}
             <hr style="margin: 20px 0; border: none; border-top: 1px solid #e5e7eb;">
-            <p style="color: #6b7280; font-size: 12px;">Bu bildirim SmartGuard tarafından otomatik oluşturulmuştur.</p>
+            <p style="color: #6b7280; font-size: 12px;">Bu bildirim Akıllı Güvenlik İstemi tarafından otomatik oluşturulmuştur.</p>
           </div>
         `,
       });
@@ -226,7 +264,7 @@ app.post('/api/notify/email', async (req, res) => {
   } else {
     console.log(`\nEMAIL SENT (MOCK):`);
     console.log(`   To: ${email}`);
-    console.log(`   Subject: SmartGuard Alarm - ${reasonText}`);
+    console.log(`   Subject: Akıllı Güvenlik İstemi Alarm - ${reasonText}`);
     console.log(`   İçerik:\n${message}`);
     console.log(`   ---`);
     

@@ -30,8 +30,23 @@ async function loadThresholds() {
 
 async function getSimulatorStatus() {
   try {
-    const res = await axios.get('http://localhost:4000/api/simulator/status');
+    const res = await axios.get('http://localhost:4000/api/simulator/control');
     simulatorRunning = res.data.running;
+    // Sunucudan senaryo bilgisini çek ve uygula
+    const scenario = res.data.scenario;
+    const until = res.data.until || 0;
+    const now = Date.now();
+    if (scenario === 'immobile' && now < until) {
+      // Zorla hareketsizlik senaryosu aktif
+      immobileScenario = true;
+      // immobile süresi görünür olsun diye başlangıcı sabitle
+      if (!immobileStartTime || now - immobileStartTime > 60000) {
+        immobileStartTime = now;
+      }
+    } else if (immobileScenario && now >= until) {
+      // Süre bitti, otomatik kapat
+      immobileScenario = false;
+    }
   } catch (err) {
     // Hata durumunda varsayılan olarak çalışmaya devam et
   }
@@ -44,6 +59,7 @@ function randomNormal(min, max) {
 async function simulate() {
   const th = await loadThresholds();
   const alarms = [];
+  // Eğer sunucu tarafından zorlanmıyorsa ara sıra senaryo başlat (demo)
   if (!immobileScenario && Math.random() < 0.01) {
     immobileScenario = true;
     immobileStartTime = Date.now();
@@ -85,13 +101,14 @@ async function simulate() {
     ax = randomNormal(-0.05, 0.05);
     ay = randomNormal(-0.05, 0.05);
     az = randomNormal(0, 0.2);
-  } else if (immobileScenario && (Date.now() - immobileStartTime) < 10000) {
-    ax = randomNormal(-0.03, 0.03);
-    ay = randomNormal(-0.03, 0.03);
-    az = randomNormal(0.95, 1.05);
+  } else if (immobileScenario) {
+    // Hareketsizlik senaryosu boyunca ÇOK düşük hareket (magnitude < 0.05)
+    // Backend'teki moving kontrolü (mag > 0.05) geçemeyecek
+    ax = randomNormal(-0.01, 0.01);
+    ay = randomNormal(-0.01, 0.01);
+    az = randomNormal(-0.01, 0.01);
   } else {
     fallDetected = false;
-    immobileScenario = false;
     ax = randomNormal(-0.2, 0.2);
     ay = randomNormal(-0.2, 0.2);
     az = randomNormal(0.8, 1.2);
@@ -111,8 +128,12 @@ async function simulate() {
   lastSpO2 = spo2;
 
   const immobileTime = (Date.now() - lastMoveTime) / 1000;
-  if (immobileTime > 5) {
-    alarms.push("IMMOBILE");
+  // Backend'teki thresholds.immobileSec ile tutarlı (varsayılan 600 sn)
+  // Demo için kısa süreli testler yapılabilir
+  if (immobileTime >= th.immobileSec) {
+    if (!alarms.includes('IMMOBILE')) {
+      alarms.push('IMMOBILE');
+    }
   }
   if (heartRate < 45 && immobileTime > 3) {
     alarms.push("CRITICAL_HR");

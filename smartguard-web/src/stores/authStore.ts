@@ -45,8 +45,10 @@ export const useAuthStore = create<AuthState>()(
           (u) => u.username.toLowerCase() === uname && u.password === password
         )
         if (found) {
+          // Kullanıcı ID'sini kullanıcı adından türet (mobil ile uyumlu)
+          const userId = found.username.toLowerCase().replace(/[^a-z0-9]/g, '')
           set({
-            user: { id: found.id, username: found.username, role: found.role },
+            user: { id: userId, username: found.username, role: found.role },
             isAuthenticated: true,
           })
           return true
@@ -62,7 +64,7 @@ export const useAuthStore = create<AuthState>()(
         
         // Yeni kullanıcı ekle
         const newUser = {
-          id: String(mockUsers.length + 1),
+          id: uname.toLowerCase().replace(/[^a-z0-9]/g, ''),
           username: uname,
           password,
           role: 'user' as const,
