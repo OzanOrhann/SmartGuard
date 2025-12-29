@@ -13,6 +13,7 @@ interface AuthState {
   login: (username: string, password: string) => boolean
   register: (username: string, password: string) => boolean
   logout: () => void
+  changePassword: (oldPassword: string, newPassword: string) => boolean
 }
 
 // Basit mock auth - başlangıçta boş, kayıt olarak kullanıcı oluşturulur
@@ -35,7 +36,7 @@ const saveMockUsers = () => {
 
 export const useAuthStore = create<AuthState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       user: null,
       isAuthenticated: false,
       login: (username: string, password: string) => {
@@ -78,6 +79,19 @@ export const useAuthStore = create<AuthState>()(
       },
       logout: () => {
         set({ user: null, isAuthenticated: false })
+      },
+      changePassword: (oldPassword: string, newPassword: string) => {
+        const currentUser = get().user
+        if (!currentUser) return false
+        const idx = mockUsers.findIndex(
+          (u) => u.username.toLowerCase() === currentUser.username.toLowerCase()
+        )
+        if (idx === -1) return false
+        if (mockUsers[idx].password !== oldPassword) return false
+        if (!newPassword || newPassword.length < 4) return false
+        mockUsers[idx] = { ...mockUsers[idx], password: newPassword }
+        saveMockUsers()
+        return true
       },
     }),
     {
