@@ -191,7 +191,7 @@ app.post('/api/notify/email', async (req, res) => {
         text: message,
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h2 style="color: #dc2626;">🚨 SmartGuard Alarm Bildirimi</h2>
+            <h2 style="color: #dc2626;">SmartGuard Alarm Bildirimi</h2>
             <p><strong>Saat/Tarih:</strong> ${tsText}</p>
             <p><strong>Şiddet:</strong> <span style="color: #dc2626;">${severity || 'CRITICAL'}</span></p>
             <p><strong>Sebep(ler):</strong> ${reasonText}</p>

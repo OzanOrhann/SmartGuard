@@ -126,7 +126,7 @@ export default function DashboardPage() {
           <div className="flex items-start gap-3">
             <AlertCircle className="text-red-600 mt-0.5" size={24} />
             <div>
-              <h3 className="font-bold text-red-800 mb-1">⚠️ ALARM</h3>
+              <h3 className="font-bold text-red-800 mb-1">ALARM</h3>
               <ul className="text-red-700 text-sm space-y-1">
                 {data.alarms.map((alarm, idx) => (
                   <li key={idx}>• {translateAlarm(alarm)}</li>
