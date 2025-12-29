@@ -25,9 +25,9 @@ if (process.env.SMTP_HOST && process.env.SMTP_USER && process.env.SMTP_PASS) {
       pass: process.env.SMTP_PASS,
     },
   });
-  console.log('✅ SMTP email servisi aktif:', process.env.SMTP_USER);
+  console.log('SMTP email service active:', process.env.SMTP_USER);
 } else {
-  console.log('⚠️  SMTP ayarları bulunamadı, mock mod aktif');
+  console.log('SMTP settings not found, using mock mode');
 }
 
 let latestData = null;
@@ -209,7 +209,7 @@ app.post('/api/notify/email', async (req, res) => {
         `,
       });
       
-      console.log(`\n✅ E-MAIL GÖNDERİLDİ: ${email}`);
+      console.log(`\nEMAIL SENT: ${email}`);
       
       res.json({ 
         success: true, 
@@ -224,10 +224,9 @@ app.post('/api/notify/email', async (req, res) => {
       });
     }
   } else {
-    // Mock mod: sadece console'a yaz
-    console.log(`\n📧 E-MAIL GÖNDERİLDİ (MOCK):`);
-    console.log(`   Alıcı: ${email}`);
-    console.log(`   Konu: SmartGuard Alarm - ${reasonText}`);
+    console.log(`\nEMAIL SENT (MOCK):`);
+    console.log(`   To: ${email}`);
+    console.log(`   Subject: SmartGuard Alarm - ${reasonText}`);
     console.log(`   İçerik:\n${message}`);
     console.log(`   ---`);
     
@@ -266,11 +265,11 @@ app.post('/api/alarms/save', (req, res) => {
     // Toplam alarm sayısını al
     const result = countAlarmsByUserId.get(userId);
     const count = result.count;
-    console.log(`💾 Alarm SQLite'a kaydedildi - User: ${userId}, Total: ${count}`);
+    console.log(`Alarm saved to SQLite - User: ${userId}, Total: ${count}`);
     
     res.json({ success: true, count });
   } catch (err) {
-    console.error('❌ Alarm kaydetme hatası:', err);
+    console.error('Alarm save error:', err);
     res.status(500).json({ error: 'Alarm kaydedilemedi' });
   }
 });
@@ -310,11 +309,11 @@ app.get('/api/alarms/history/:userId', (req, res) => {
       };
     });
     
-    console.log(`📖 Alarm geçmişi SQLite'tan sorgulandı - User: ${userId}, Count: ${formattedAlarms.length}`);
+    console.log(`Alarm history queried from SQLite - User: ${userId}, Count: ${formattedAlarms.length}`);
     
     res.json({ alarms: formattedAlarms });
   } catch (err) {
-    console.error('❌ Alarm geçmişi çekme hatası:', err);
+    console.error('Alarm history fetch error:', err);
     res.status(500).json({ error: 'Alarm geçmişi alınamadı', alarms: [] });
   }
 });
@@ -334,11 +333,10 @@ server.listen(PORT, '0.0.0.0', () => {
     }
   }
 
-  console.log(`\n✅ Backend çalışıyor: http://0.0.0.0:${PORT}`);
-  console.log(`📱 iPhone'dan erişim: http://smartguard.local:${PORT}`);
-  console.log(`🖥️  Bu bilgisayardan: http://${localIp}:${PORT}\n`);
+  console.log(`\nBackend running: http://0.0.0.0:${PORT}`);
+  console.log(`iPhone access: http://smartguard.local:${PORT}`);
+  console.log(`Local PC: http://${localIp}:${PORT}\n`);
 
-  // mDNS (Bonjour) kaydı - iPhone otomatik bulabilir
   dns.on('query', (query) => {
     if (query.questions[0].name === 'smartguard.local') {
       dns.respond([
@@ -349,7 +347,7 @@ server.listen(PORT, '0.0.0.0', () => {
           data: localIp
         }
       ]);
-      console.log(`🔗 mDNS cevap: smartguard.local -> ${localIp}`);
+      console.log(`mDNS response: smartguard.local -> ${localIp}`);
     }
   });
 });

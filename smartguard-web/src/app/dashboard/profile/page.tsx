@@ -51,7 +51,7 @@ export default function ProfilePage() {
             <div>
               <div className="text-sm text-gray-500 mb-1">E-posta</div>
               <div className="font-medium text-gray-800">{user.username}@smartguard.com</div>
-              <p className="text-xs text-gray-400 mt-1">(Demo için mock veri)</p>
+              <p className="text-xs text-gray-400 mt-1">(Örnek veri)</p>
             </div>
           </div>
         </div>
@@ -60,7 +60,7 @@ export default function ProfilePage() {
           <h4 className="font-semibold text-gray-800 mb-3">Hesap Bilgileri</h4>
           <div className="text-sm text-gray-600 space-y-2">
             <p>• Hesap ID: {user.id}</p>
-            <p>• Kayıt Tarihi: 01 Ocak 2025 (Demo)</p>
+            <p>• Kayıt Tarihi: 01 Ocak 2025</p>
             <p>• Son Giriş: Şu an</p>
           </div>
         </div>

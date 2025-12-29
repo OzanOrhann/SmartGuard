@@ -27,7 +27,7 @@ db.exec(`
   CREATE INDEX IF NOT EXISTS idx_timestamp ON alarms(timestamp DESC);
 `);
 
-console.log('✅ SQLite veritabanı hazır:', dbPath);
+console.log('SQLite database ready:', dbPath);
 
 // Alarm kaydetme
 const saveAlarm = db.prepare(`

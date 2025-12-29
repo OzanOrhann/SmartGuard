@@ -15,7 +15,7 @@ interface AuthState {
   logout: () => void
 }
 
-// Basit mock auth (demo için) - başlangıçta boş, kayıt olarak kullanıcı oluşturulur
+// Basit mock auth - başlangıçta boş, kayıt olarak kullanıcı oluşturulur
 // localStorage'dan yükle veya boş diziye başla
 let mockUsers: Array<{
   id: string
