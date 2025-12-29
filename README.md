@@ -51,12 +51,23 @@ cd SmartGuard
 ```bash
 cd smartguard_api
 npm install
+
+# .env dosyası OPSIYONEL (email özelliği kullanmayacaksanız atla)
+# Sadece alarm email göndermek isterseniz:
 cp .env.example .env
-# .env dosyasını düzenleyin (email ayarları)
+# .env dosyasını açıp Gmail bilgilerinizi girin
+
 node src/server.js
 ```
 
+✅ **Otomatik oluşur:**
+- `smartguard.db` dosyası (SQLite veritabanı)
+- Tüm tablolar ve index'ler
+
 ### 3. Simulator'ı Başlatın (Ayrı Terminal)
+
+**ÖNEMLİ:** Gerçek bileklik bağlayacaksanız bu adımı **atlayın**! BLE kullanırken simulator kapalı olmalı.
+
 ```bash
 cd smartguard_api
 node src/simulator.js
@@ -72,17 +83,33 @@ npm run dev
 Web: http://localhost:3000
 
 ### 5. Mobil Uygulamayı Başlatın (Opsiyonel)
+
 ```bash
 cd smartguard-mobile
 npm install
 npx expo start
 ```
 
+**🩺 BLE (Bluetooth) ile Gerçek Bileklik Bağlama:**
+- Mobil app'te "Bluetooth" sekmesine gidin
+- "Bileklik Ara" butonuna tıklayın
+- Bilekliğinizi seçip bağlanın
+- Gerçek sensör verisi otomatik backend'e gönderilir
+- **Detaylı kılavuz:** [BLE_KULLANIM.md](BLE_KULLANIM.md)
+
 ## 📋 Gereksinimler
 
-- Node.js 18+
-- npm veya yarn
-- Expo Go (mobil için, opsiyonel)
+**Sadece Node.js yeterli! Başka bir şey kurmanıza gerek yok.**
+
+- **Node.js 18+** (https://nodejs.org)
+- npm (Node.js ile birlikte gelir)
+- **Expo Go** (mobil için, tamamen opsiyonel)
+
+❌ **GEREKMEZ:**
+- Python, Java, veya başka bir runtime
+- MongoDB, PostgreSQL gibi harici veritabanı
+- Docker
+- Herhangi bir hesap oluşturma (email hariç - opsiyonel)
 
 ## ⚙️ Ayarlar (Settings Sayfası)
 
@@ -100,7 +127,7 @@ SmartGuard/
 ├── smartguard_api/       # Backend API
 │   ├── src/
 │   │   ├── server.js     # Express + Socket.io
-│   │   ├── simulator.js  # Sensör simülasyonu
+│   │   ├── simulator.js  # Sensör simülasyonu (opsiyonel)
 │   │   └── models/
 │   │       └── Alarm.js  # SQLite model
 │   └── smartguard.db     # Veritabanı (otomatik oluşur)
@@ -112,7 +139,8 @@ SmartGuard/
 │
 └── smartguard-mobile/    # React Native App
     └── src/
-        ├── screens/      # Mobil ekranlar
+        ├── screens/      # Mobil ekranlar (+ BluetoothScreen)
+        ├── services/     # BLEService (bileklik bağlantısı)
         └── hooks/        # Custom hooks
 ```
 
@@ -122,7 +150,7 @@ SmartGuard/
 - Node.js + Express
 - Socket.io (WebSocket)
 - SQLite (better-sqlite3)
-- Nodemailer (Email)
+- Nodemailer (Email - opsiyonel)
 
 **Web:**
 - Next.js 14
@@ -130,12 +158,23 @@ SmartGuard/
 - Zustand (State)
 - Socket.io-client
 
-**Mobile:**
-- React Native
-- Expo
-- AsyncStorage
+**Mobil:**
+- React Native (Expo)
+- react-native-ble-plx (Bluetooth)
 - Socket.io-client
+- Expo Notifications
 
+**Email olmadan da tüm özellikler çalışır!** Email sadece alarm bildirimleri göndermek için.
+
+Kullanmak isterseniz:
+
+**Gmail için:**
+1. `.env.example` dosyasını `.env` olarak kopyalayın
+2. Google hesabında "2-Step Verification" aktif edin
+3. https://myaccount.google.com/apppasswords adresinden "App Password" oluşturun
+4. `.env` dosyasına email ve şifre girin
+
+**Gmail olmadan da çalışır:** Email özelliğini kullanmazsanız hiçbir şey yapmanıza gerek yok
 ## 📧 Email Bildirimleri
 
 Alarmlar email ile gönderilebilir. `.env` dosyasında SMTP ayarları yapılmalı:
@@ -147,6 +186,8 @@ Alarmlar email ile gönderilebilir. `.env` dosyasında SMTP ayarları yapılmal�
 
 ## 🎮 Test Senaryoları
 
+### Option 1: Simulator (Mock Veri)
+
 Simulator çalışırken:
 - **Normal durum:** Rastgele ama gerçekçi değerler
 - **%1 olasılık:** Hareketsizlik senaryosu başlar (10 saniye)
@@ -157,6 +198,16 @@ Konsol çıktısında görürsünüz:
 🔴 HAREKETSİZLİK SENARYOSU BAŞLADI
 🔴 DÜŞME SENARYOSU BAŞLADI
 ```
+
+### Option 2: Gerçek Bileklik (BLE)
+
+Mobil app'te:
+1. "Bluetooth" sekmesine git
+2. "Bileklik Ara" → Cihazı seç → Bağlan
+3. Gerçek sensör verisi gelmeye başlar
+4. **Simulator'ü kapat!** (İki kaynak çakışmasın)
+
+**Detaylar:** [BLE_KULLANIM.md](BLE_KULLANIM.md)
 
 ## 📸 Ekran Görüntüleri
 

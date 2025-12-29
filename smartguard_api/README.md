@@ -4,24 +4,39 @@ Backend API servisi - Sağlık sensör verileri, alarm sistemi ve WebSocket dest
 
 ## 🚀 Kurulum
 
+**Sadece npm install yeterli!**
+
 1. **Bağımlılıkları yükleyin:**
 ```bash
 npm install
 ```
 
-2. **Ortam değişkenlerini ayarlayın:**
+2. **Hemen çalıştırabilirsiniz!** 
+```bash
+node src/server.js
+```
+
+Veritabanı (smartguard.db) otomatik oluşturulacak.
+
+---
+
+### 📧 Email Bildirimleri (Opsiyonel)
+
+**Email olmadan da çalışır!** Sadece alarm email göndermek isterseniz:
+
 ```bash
 cp .env.example .env
 ```
 
 `.env` dosyasını düzenleyin:
 ```env
-PORT=4000
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USER=your-email@gmail.com
-SMTP_PASS=your-app-password
+SMTP_PASS=your-app-password  # Gmail App Password gerekli
 ```
+
+Gmail App Password: https://myaccount.google.com/apppasswords
 
 ## 📦 Çalıştırma
 
