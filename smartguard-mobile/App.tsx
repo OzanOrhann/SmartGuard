@@ -143,7 +143,7 @@ export default function App() {
 
   const auth: AuthContextType = {
     user,
-    register: (username, password) => {
+    register: async (username, password) => {
       const uname = username.trim();
       if (!uname || !password) return;
       const exists = users.find(u => u.username.toLowerCase() === uname.toLowerCase());
@@ -157,7 +157,7 @@ export default function App() {
       setUser(uname);
       await AsyncStorage.setItem('sg-last-user', uname);
       const userId = uname.toLowerCase().replace(/[^a-z0-9]/g, '');
-      AsyncStorage.setItem('smartguard-user-id', userId);
+      await AsyncStorage.setItem('smartguard-user-id', userId);
     },
     login: (username, password) => {
       const uname = username.trim();
