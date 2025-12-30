@@ -276,6 +276,43 @@ app.post('/api/notify/email', async (req, res) => {
   }
 });
 
+// Expo push bildirimi (test/manuel kullanım)
+// Body: { tokens: string | string[], title?: string, body?: string, data?: object }
+app.post('/api/notify/push', async (req, res) => {
+  try {
+    const { tokens, title, body, data } = req.body || {};
+    const list = Array.isArray(tokens) ? tokens : tokens ? [tokens] : [];
+    const valid = list.filter((t) => typeof t === 'string' && t.startsWith('ExponentPushToken'));
+    if (!valid.length) {
+      return res.status(400).json({ success: false, error: 'Geçerli Expo push token yok' });
+    }
+
+    const messages = valid.map((to) => ({
+      to,
+      sound: 'default',
+      title: title || 'Akıllı Güvenlik İstemi',
+      body: body || 'Push bildirimi gönderildi',
+      data: data || {}
+    }));
+
+    const response = await fetch('https://exp.host/--/api/v2/push/send', {
+      method: 'POST',
+      headers: {
+        'Accept': 'application/json',
+        'Accept-encoding': 'gzip, deflate',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify(messages)
+    });
+
+    const json = await response.json();
+    res.json({ success: true, result: json });
+  } catch (err) {
+    console.error('Push send error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Alarm geçmişi kaydetme (POST)
 app.post('/api/alarms/save', (req, res) => {
   const { userId, alarm } = req.body;

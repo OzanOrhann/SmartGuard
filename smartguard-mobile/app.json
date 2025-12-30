@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "Akıllı Güvenlik İstemi",
+    "slug": "smartguard-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.ozanorhan.smartguard",
+      "infoPlist": {
+        "NSBluetoothAlwaysUsageDescription": "Bileklik ile bağlantı kurmak için Bluetooth kullanılır.",
+        "NSBluetoothPeripheralUsageDescription": "Bileklik ile bağlantı kurmak için Bluetooth kullanılır.",
+        "NSLocationWhenInUseUsageDescription": "Yakındaki BLE cihazlarını taramak için konum izni gerekir.",
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.ozanorhan.smartguard",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "permissions": [
+        "BLUETOOTH",
+        "BLUETOOTH_ADMIN",
+        "BLUETOOTH_CONNECT",
+        "BLUETOOTH_SCAN",
+        "ACCESS_FINE_LOCATION"
+      ]
+    },
+    "plugins": ["react-native-ble-plx"],
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "77c402f6-9d44-4750-ad01-156e0f421dbf"
+      }
+    }
+  }
+}
