@@ -7,6 +7,7 @@ import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Notifications from 'expo-notifications';
 import { API_BASE } from './src/hooks/useSensorData';
+import { registerPushToken } from './src/utils/NotificationHelper';
 
 import  StatusScreen  from './src/screens/StatusScreen';
 import AlarmsScreen from './src/screens/AlarmsScreen';
@@ -96,29 +97,24 @@ export default function App() {
   const [users, setUsers] = useState<StoredUser[]>([]);
   const [loaded, setLoaded] = useState(false);
 
-  // Push bildirimi izni + token kaydı (Expo)
+  // Push bildirimi izni + token kaydı (Render notification service)
   useEffect(() => {
     (async () => {
       try {
-        const perm = await Notifications.requestPermissionsAsync();
-        if (!perm.granted) return;
-        const tokenResponse = await Notifications.getExpoPushTokenAsync({ projectId: '77c402f6-9d44-4750-ad01-156e0f421dbf' });
-        const token = tokenResponse.data;
-        await AsyncStorage.setItem('sg-push-token', token);
-        // Kullanıcı kimliği varsa backend'e bildir
+        // Kullanıcı ID'sini al
         const userId = await AsyncStorage.getItem('smartguard-user-id');
         if (userId) {
-          fetch(`${API_BASE}/api/notify/push`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ tokens: [token], title: 'Push kaydı', body: 'Token alındı', data: { userId } })
-          }).catch(() => {});
+          // Render notification service'e token kaydet
+          const success = await registerPushToken(userId);
+          if (success) {
+            console.log('✅ Push token registered to notification service');
+          }
         }
       } catch (err) {
-        console.log('Push token alınamadı:', err);
+        console.log('Push token kaydı başarısız:', err);
       }
     })();
-  }, []);
+  }, [user]); // user değişince yeniden kaydet
 
   useEffect(() => {
     (async () => {

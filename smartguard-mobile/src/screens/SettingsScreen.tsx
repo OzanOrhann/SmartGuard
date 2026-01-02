@@ -11,8 +11,10 @@ import {
   TouchableWithoutFeedback,
   Keyboard,
   Button,
-  Alert
+  Alert,
+  TouchableOpacity
 } from 'react-native';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
 import { API_BASE, Thresholds, useSensorData } from '../hooks/useSensorData';
 
@@ -20,10 +22,47 @@ export default function SettingsScreen() {
   const { thresholds } = useSensorData();
   const [localTh, setLocalTh] = useState<Thresholds>(thresholds);
   const [saving, setSaving] = useState(false);
+  const [notifyUsers, setNotifyUsers] = useState<string[]>([]);
+  const [newUserId, setNewUserId] = useState('');
 
   useEffect(() => {
     setLocalTh(thresholds);
   }, [thresholds]);
+
+  // Bildirim hedef kullanıcılarını yükle
+  useEffect(() => {
+    AsyncStorage.getItem('notify-users').then(stored => {
+      if (stored) {
+        setNotifyUsers(JSON.parse(stored));
+      }
+    });
+  }, []);
+
+  // Hedef kullanıcı ekle
+  const addNotifyUser = async () => {
+    const userId = newUserId.trim();
+    if (!userId) {
+      Alert.alert('Hata', 'Kullanıcı ID boş olamaz');
+      return;
+    }
+    if (notifyUsers.includes(userId)) {
+      Alert.alert('Hata', 'Bu kullanıcı zaten ekli');
+      return;
+    }
+    const updated = [...notifyUsers, userId];
+    setNotifyUsers(updated);
+    await AsyncStorage.setItem('notify-users', JSON.stringify(updated));
+    setNewUserId('');
+    Alert.alert('Başarılı', `${userId} bildirim listesine eklendi`);
+  };
+
+  // Hedef kullanıcı sil
+  const removeNotifyUser = async (userId: string) => {
+    const updated = notifyUsers.filter(u => u !== userId);
+    setNotifyUsers(updated);
+    await AsyncStorage.setItem('notify-users', JSON.stringify(updated));
+    Alert.alert('Silindi', `${userId} bildirim listesinden çıkarıldı`);
+  };
 
   function updateField<K extends keyof Thresholds>(key: K, value: string) {
     const num = Number(value.replace(',', '.'));
@@ -119,6 +158,41 @@ export default function SettingsScreen() {
             <View style={styles.button}>
               <Button title="Kaydet" onPress={handleSave} disabled={saving} />
             </View>
+
+            {/* Bildirim Hedef Kullanıcıları */}
+            <Text style={[styles.title, { marginTop: 32 }]}>📲 Push Bildirim Gönderilecekler</Text>
+            
+            <View style={styles.addUserSection}>
+              <TextInput
+                style={[styles.input, { flex: 1 }]}
+                placeholder="Kullanıcı ID"
+                value={newUserId}
+                onChangeText={setNewUserId}
+                autoCapitalize="none"
+              />
+              <TouchableOpacity style={styles.addButton} onPress={addNotifyUser}>
+                <Text style={styles.addButtonText}>+ Ekle</Text>
+              </TouchableOpacity>
+            </View>
+
+            {notifyUsers.length === 0 ? (
+              <Text style={styles.emptyText}>Henüz hedef kullanıcı eklenmedi</Text>
+            ) : (
+              <View style={styles.userList}>
+                {notifyUsers.map((userId) => (
+                  <View key={userId} style={styles.userItem}>
+                    <Text style={styles.userIdText}>{userId}</Text>
+                    <TouchableOpacity onPress={() => removeNotifyUser(userId)}>
+                      <Text style={styles.removeButton}>🗑️ Sil</Text>
+                    </TouchableOpacity>
+                  </View>
+                ))}
+              </View>
+            )}
+            
+            <Text style={styles.helpText}>
+              💡 Alarm oluştuğunda bu kullanıcılara push bildirim gönderilir
+            </Text>
           </View>
         </ScrollView>
       </TouchableWithoutFeedback>
@@ -170,5 +244,55 @@ const styles = StyleSheet.create({
   button: {
     flex: 1,
     marginHorizontal: 4
+  },
+  addUserSection: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 16
+  },
+  addButton: {
+    backgroundColor: '#007aff',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 10,
+    justifyContent: 'center'
+  },
+  addButtonText: {
+    color: 'white',
+    fontWeight: '600'
+  },
+  userList: {
+    gap: 8,
+    marginBottom: 16
+  },
+  userItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: 'white',
+    padding: 12,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#e5e5ea'
+  },
+  userIdText: {
+    fontSize: 16,
+    fontWeight: '500'
+  },
+  removeButton: {
+    fontSize: 14,
+    color: '#ff3b30'
+  },
+  emptyText: {
+    fontSize: 14,
+    color: '#8e8e93',
+    textAlign: 'center',
+    marginVertical: 16
+  },
+  helpText: {
+    fontSize: 13,
+    color: '#6e6e73',
+    fontStyle: 'italic',
+    marginTop: 8
   }
 });

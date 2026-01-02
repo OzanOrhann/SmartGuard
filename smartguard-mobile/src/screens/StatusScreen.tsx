@@ -3,7 +3,9 @@ import React, { useEffect, useRef, useState } from 'react';
 import { View, Text, StyleSheet, SafeAreaView, TouchableOpacity, ActivityIndicator } from 'react-native';
 import { useSensorData, API_BASE } from '../hooks/useSensorData';
 import * as Notifications from 'expo-notifications';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import axios from 'axios';
+import { sendFallAlert, sendImmobileAlert, sendHeartRateAlert, sendSpO2Alert } from '../utils/NotificationHelper';
 
 // Bildirim davranışı (uygulama açıkken de popup göstersin)
 Notifications.setNotificationHandler({
@@ -23,9 +25,19 @@ export default function StatusScreen() {
   const [simulatorRunning, setSimulatorRunning] = useState(true);
   const [simulatorLoading, setSimulatorLoading] = useState(false);
   const [scenarioLoading, setScenarioLoading] = useState(false);
+  const [notifyUsers, setNotifyUsers] = useState<string[]>([]);
 
   // Aynı alarmı iki kere bildirmemek için
   const lastAlarmTs = useRef<number | null>(null);
+
+  // Hedef kullanıcıları yükle (bildirim gönderilecekler)
+  useEffect(() => {
+    AsyncStorage.getItem('notify-users').then(stored => {
+      if (stored) {
+        setNotifyUsers(JSON.parse(stored));
+      }
+    });
+  }, []);
 
   // Simulator durumunu kontrol et
   useEffect(() => {
@@ -71,8 +83,10 @@ export default function StatusScreen() {
     if (lastAlarmTs.current === data.ts) return;
     lastAlarmTs.current = data.ts;
 
-    const body = data.alarms.join(', '); // Örn: "HR_LOW, SPO2_LOW"
+    const alarmTypes = data.alarms;
+    const body = alarmTypes.join(', '); // Örn: "HR_LOW, SPO2_LOW"
 
+    // Lokal bildirim
     Notifications.scheduleNotificationAsync({
       content: {
         title: 'Akıllı Güvenlik İstemi Alarm',
@@ -80,7 +94,26 @@ export default function StatusScreen() {
       },
       trigger: null // hemen göster
     });
-  }, [data?.ts, data?.alarms?.join(',')]);
+
+    // Render notification service'e push gönder (hedef kullanıcılara)
+    if (notifyUsers.length > 0) {
+      alarmTypes.forEach(async (alarmType) => {
+        try {
+          if (alarmType === 'FALL') {
+            await sendFallAlert(data.accel?.magnitude || 0, notifyUsers);
+          } else if (alarmType === 'IMMOBILE') {
+            await sendImmobileAlert(data.immobileTime || 0, notifyUsers);
+          } else if (alarmType === 'HR_LOW' || alarmType === 'HR_HIGH') {
+            await sendHeartRateAlert(data.heartRate, notifyUsers);
+          } else if (alarmType === 'SPO2_LOW') {
+            await sendSpO2Alert(data.spo2, notifyUsers);
+          }
+        } catch (err) {
+          console.error('Push notification error:', err);
+        }
+      });
+    }
+  }, [data?.ts, data?.alarms?.join(','), notifyUsers]);
 
   if (loading || !data) {
     return (
