@@ -276,6 +276,48 @@ app.post('/api/notify/email', async (req, res) => {
   }
 });
 
+// Veri al ve bildirim gönder (Telefon A'dan Telefon B'ye)
+// Body: { data: any, notifyTokens?: string[] }
+app.post('/api/sensor/notify', async (req, res) => {
+  try {
+    const { data, notifyTokens } = req.body || {};
+    
+    // Veriyi kaydet (opsiyonel)
+    console.log('Sensor data received:', data);
+    
+    // Bildirim gönder
+    if (notifyTokens && notifyTokens.length > 0) {
+      const valid = notifyTokens.filter((t) => typeof t === 'string' && t.startsWith('ExponentPushToken'));
+      
+      if (valid.length > 0) {
+        const messages = valid.map((to) => ({
+          to,
+          sound: 'default',
+          title: data.title || 'Yeni Veri',
+          body: data.body || 'Sensörden veri alındı',
+          data: data
+        }));
+
+        await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(messages)
+        });
+        
+        console.log(`Push notification sent to ${valid.length} device(s)`);
+      }
+    }
+    
+    res.json({ success: true, message: 'Data received and notification sent' });
+  } catch (err) {
+    console.error('Sensor notify error:', err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
 // Expo push bildirimi (test/manuel kullanım)
 // Body: { tokens: string | string[], title?: string, body?: string, data?: object }
 app.post('/api/notify/push', async (req, res) => {

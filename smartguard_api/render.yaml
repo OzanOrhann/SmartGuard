@@ -1,0 +1,24 @@
+services:
+  # Ana backend
+  - type: web
+    name: smartguard-api
+    env: node
+    buildCommand: npm install
+    startCommand: node src/server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 4000
+  
+  # Bildirim servisi (standalone)
+  - type: web
+    name: smartguard-notifications
+    env: node
+    buildCommand: npm install
+    startCommand: node notification-server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NOTIFICATION_PORT
+        value: 5000
